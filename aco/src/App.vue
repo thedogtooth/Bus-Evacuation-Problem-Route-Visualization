@@ -38,10 +38,24 @@
     </div>
     <div class="column menu-buttons">
       <input type="file" ref="fileInput" accept=".txt" @change="onFilePicked"/>
-      <button @click="runAlgorithm" :disabled="!fileUploaded">
-        <i class="fa fa-play"></i>
-        Run
-      </button>
+      <div class="row">
+        <div class="column">
+          <button @click="runAlgorithm" :disabled="!fileUploaded">
+            <i class="fa fa-play"></i>
+            Run
+          </button>
+        </div>
+        <div class="column" v-if="muted">
+          <button @click="mute">
+            <i class="fa fa-volume-off"></i>
+          </button>
+        </div>
+        <div class="column" v-else>
+          <button @click="mute">
+            <i class="fa fa-volume-up"></i>
+          </button>
+        </div>
+      </div>
     </div>
     <template v-if="executed == true && loading == false">
       <p>Execution Time: {{ executionTime }}s</p>
@@ -178,6 +192,8 @@
   var loading = ref(false);
   var pathsHidden = ref(false);
   var sourceImage, originalImage = ref('');
+  var muted = ref(false);
+  var audio = new Audio('../src/assets/finish.mp3');
 
   const plusBus = () => {
     if (currentBus.value < finalRoutes.length - 1) {
@@ -546,8 +562,9 @@
           node.attr('cx', d => d.x)
               .attr('cy', d => d.y);
         });
-        var audio = new Audio('../src/assets/finish.mp3');
-        audio.play();
+        if (!muted.value) {
+          audio.play();
+        } 
       }).catch(error => {
         loading.value = false;
         console.error(error);
@@ -578,18 +595,18 @@
       });
   };
 
-  const setParametersCookie = (alpha, beta, q, decay, n_iterations) => {
-    var parameters = {alpha: alpha, beta: beta, q: q, decay: decay, n_iterations: n_iterations};
+  const setParametersCookie = (alpha, beta, q, decay, n_iterations, muted) => {
+    var parameters = {alpha: alpha, beta: beta, q: q, decay: decay, n_iterations: n_iterations, muted: muted};
     Cookies.set('parameters', JSON.stringify(parameters), { expires: 7 }); // Cookie expires in 7 days
-    setParameters(alpha, beta, q, decay, n_iterations);
+    setParameters(alpha, beta, q, decay, n_iterations, muted);
   };
 
   const getParametersCookie = () => {
     return Cookies.get('parameters');
   };
 
-  const updateParametersCookie = (alpha, beta, q, decay, n_iterations) => {
-    var parameters = {alpha: alpha, beta: beta, q: q, decay: decay, n_iterations: n_iterations};
+  const updateParametersCookie = (alpha, beta, q, decay, n_iterations, muted) => {
+    var parameters = {alpha: alpha, beta: beta, q: q, decay: decay, n_iterations: n_iterations, muted: muted};
     Cookies.set('parameters', JSON.stringify(parameters), { expires: 7 });
   };
 
@@ -597,12 +614,17 @@
     Cookies.remove('parameters');
   };
 
-  const setParameters = (newAlpha, newBeta, newQ, newDecay, newN) => {
+  const setParameters = (newAlpha, newBeta, newQ, newDecay, newN, mutedValue) => {
     alpha.value = parseFloat(newAlpha);
     beta.value = parseFloat(newBeta);
     q.value = parseInt(newQ);
     decay.value = parseFloat(newDecay);
     n_iterations.value = parseInt(newN);
+    muted.value = mutedValue;
+  };
+
+  const mute = () => {
+    muted.value = !muted.value;
   };
 
   onBeforeMount(() => {
@@ -611,10 +633,10 @@
   onMounted(() => {
     if (getParametersCookie() == undefined) {
       console.log("Cookie doesn't exist");
-      setParametersCookie(2, 4, 4, 0.1, 400);
+      setParametersCookie(2, 4, 4, 0.1, 400, false);
     } else {
       var parameters = JSON.parse(getParametersCookie());
-      setParameters(parameters.alpha, parameters.beta, parameters.q, parameters.decay, parameters.n_iterations);
+      setParameters(parameters.alpha, parameters.beta, parameters.q, parameters.decay, parameters.n_iterations, parameters.muted);
     }
   });
 
@@ -622,7 +644,7 @@
   });
 
   onUpdated(() => {
-    updateParametersCookie(alpha.value, beta.value, q.value, decay.value, n_iterations.value);
+    updateParametersCookie(alpha.value, beta.value, q.value, decay.value, n_iterations.value, muted.value);
   });
 
 </script>

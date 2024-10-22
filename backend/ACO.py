@@ -101,7 +101,9 @@ class ACO:
             #    shelterSolutions.pop(maxDistance)
             #    pickupPointsSolutions.pop(maxDistance)
             #    bestSolutionsPathDistance.pop(maxDistance)
+            #print("Old Pheromones", self.pheromone)
             self.pheromone = (1 - self.decay)*self.pheromone + self.spread_pheronomes(self.ants)
+            #print("New Pheromones", self.pheromone)
             #self.testPheromone = (1 - self.decay)*self.testPheromone + self.spread_test_pheronomes(self.ants)
             #print(self.testPheromone)
             
@@ -247,8 +249,8 @@ class ACO:
                 #    delta[move[0]][move[1]] += self.q / self.distances[move[0]][move[1]]
                 #if self.algorithm == "ant_cycle":
                 delta[move[0]][move[1]] += self.q / ant.pathDistance
-            break # Only the best path is considered
-
+                #print(delta[move[0]][move[1]])
+            #break # Only the best path is considered
         return delta
     
     def spread_test_pheronomes(self, ants):
@@ -257,7 +259,6 @@ class ACO:
         delta[sorted_paths[0].path[0][0]][sorted_paths[0].path[0][1]] += self.q / sorted_paths[0].pathDistance
         return delta
                 
-
     def improveBestSolution(self, result):
         resetWhile = True
         resultCopy = copy.deepcopy(result)
